@@ -398,6 +398,18 @@
 
   .price-card li::before { content: "✓"; position: absolute; left: 0; color: var(--clay-light); font-weight: 700; }
 
+  .deadline-badge {
+    display: inline-block;
+    background: var(--clay);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    margin-top: 6px;
+  }
+
   .form-card {
     background: var(--white);
     border-radius: 18px;
@@ -750,7 +762,10 @@
         <div class="price-card">
           <span class="tag">Lote inaugural</span>
           <div class="amount">R$ 297</div>
-          <p class="amount-note">Por profissional · vagas limitadas</p>
+          <p class="amount-note">Profissional formado em Psicologia</p>
+          <div class="amount" style="font-size: 26px; margin-top: 14px;">R$ 149</div>
+          <p class="amount-note">Estudante de Psicologia</p>
+          <span class="deadline-badge">Válido até 15 de setembro</span>
           <ul>
             <li>8h de imersão presencial em Maceió/AL</li>
             <li>Material de apoio</li>
@@ -791,12 +806,11 @@
 
             <div class="field-row">
               <div class="field">
-                <label for="formacao">Formação</label>
-                <select id="formacao" name="formacao" required>
+                <label for="situacao">Situação</label>
+                <select id="situacao" name="situacao" required>
                   <option value="" disabled selected>Selecione</option>
-                  <option value="Psicologia">Psicologia</option>
-                  <option value="Psiquiatria">Psiquiatria</option>
-                  <option value="Outra">Outra</option>
+                  <option value="Estudante de Psicologia">Estudante de Psicologia</option>
+                  <option value="Profissional formado em Psicologia">Profissional formado em Psicologia</option>
                 </select>
               </div>
               <div class="field">
@@ -827,11 +841,11 @@
           </div>
           <p class="step-label" style="text-align:center;">Etapa 2 de 2</p>
           <p class="pay-title">Dados recebidos!</p>
-          <p class="pay-text">
+          <p class="pay-text" id="pay-text">
             Falta só o pagamento para confirmar sua vaga na Imersão.
             Você será redirecionado(a) ao Mercado Pago em ambiente seguro.
           </p>
-          <a href="https://mpago.li/1JBNgKc" target="_blank" class="pay-btn" id="payBtn">Ir para pagamento seguro — R$ 297</a>
+          <a href="https://mpago.li/1JBNgKc" target="_blank" class="pay-btn" id="payBtn">Ir para pagamento seguro</a>
           <p class="helper-note">Após o pagamento, você receberá a confirmação da vaga pelo WhatsApp informado.</p>
         </div>
 
@@ -856,6 +870,11 @@
 
 <script>
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbwaHZh8MfMsnYMuePEDBrLNS7voMfa3C9nmP9SqfeZ1O9Vps0oJmSL2acaG8uT3N-M/exec";
+
+const PAYMENT_LINKS = {
+  "Estudante de Psicologia": { url: "https://mpago.li/2ZdMaJg", valor: "R$ 149", nota: "Valor de estudante válido até 15 de setembro." },
+  "Profissional formado em Psicologia": { url: "https://mpago.li/1JBNgKc", valor: "R$ 297", nota: "" }
+};
 
 function validarCPF(cpf) {
   cpf = cpf.replace(/[^\d]/g, '');
@@ -911,12 +930,14 @@ document.getElementById('registrationForm').addEventListener('submit', async fun
   submitBtn.disabled = true;
   submitBtn.textContent = 'Enviando...';
 
+  const situacao = document.getElementById('situacao').value;
+
   const formData = {
     nome: document.getElementById('nome').value,
     whatsapp: document.getElementById('whatsapp').value,
     email: document.getElementById('email').value,
     cpf: cpfValue,
-    formacao: document.getElementById('formacao').value,
+    situacao: situacao,
     instituicao: document.getElementById('instituicao').value,
     comoSoube: document.getElementById('comoSoube').value
   };
@@ -928,6 +949,18 @@ document.getElementById('registrationForm').addEventListener('submit', async fun
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(formData)
     });
+
+    const pagamento = PAYMENT_LINKS[situacao];
+    const payBtn = document.getElementById('payBtn');
+    payBtn.href = pagamento.url;
+    payBtn.textContent = 'Ir para pagamento seguro — ' + pagamento.valor;
+
+    const payTextEl = document.getElementById('pay-text');
+    if (pagamento.nota) {
+      payTextEl.innerHTML = 'Falta só o pagamento para confirmar sua vaga na Imersão. Você será redirecionado(a) ao Mercado Pago em ambiente seguro.<br><strong style="color: var(--clay);">' + pagamento.nota + '</strong>';
+    } else {
+      payTextEl.innerHTML = 'Falta só o pagamento para confirmar sua vaga na Imersão. Você será redirecionado(a) ao Mercado Pago em ambiente seguro.';
+    }
 
     document.getElementById('form-screen').classList.add('hidden');
     document.getElementById('pay-screen').classList.add('active');
